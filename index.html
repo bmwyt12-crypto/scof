@@ -1,0 +1,23 @@
+// Paste this inside your existing <script> tags
+function checkPassword() {
+    const passwordInput = document.getElementById('passwordInput').value.trim();
+    const errorMessage = document.getElementById('error');
+    const loginScreen = document.getElementById('loginScreen');
+    const website = document.getElementById('website');
+
+    if (passwordInput === "DinoDude0524") {
+        loginScreen.style.setProperty('display', 'none', 'important');
+        website.style.setProperty('display', 'flex', 'important');
+        errorMessage.style.display = "none";
+    } else {
+        errorMessage.style.display = "block";
+    }
+}
+
+// Automatically submits when pressing Enter
+document.getElementById('passwordInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        checkPassword();
+    }
+});
