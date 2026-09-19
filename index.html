@@ -1,23 +1,342 @@
-// Paste this inside your existing <script> tags
-function checkPassword() {
-    const passwordInput = document.getElementById('passwordInput').value.trim();
-    const errorMessage = document.getElementById('error');
-    const loginScreen = document.getElementById('loginScreen');
-    const website = document.getElementById('website');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCOF Union</title>
+    <style>
+        /* Base Theme Variables */
+        :root {
+            /* Light Theme: Bureaucratic Paperwork */
+            --bg-primary: #e6dfd3;
+            --bg-secondary: #dcd4c4;
+            --text-primary: #2b2b2b;
+            --text-muted: #5a5449;
+            --accent-red: #cd0000;
+            --accent-gold: #ffd700;
+            --border-color: #7a7365;
+            --font-family: 'Courier New', Courier, monospace;
+        }
 
-    if (passwordInput === "DinoDude0524") {
-        loginScreen.style.setProperty('display', 'none', 'important');
-        website.style.setProperty('display', 'flex', 'important');
-        errorMessage.style.display = "none";
-    } else {
-        errorMessage.style.display = "block";
-    }
-}
+        [data-theme="dark"] {
+            /* Dark Theme: Iron Curtain / Industrial Night */
+            --bg-primary: #1c1d1f;
+            --bg-secondary: #2b2d31;
+            --text-primary: #e0e0e0;
+            --text-muted: #a0a5ad;
+            --accent-red: #cd0000;
+            --accent-gold: #ffd700;
+            --border-color: #4a4d52;
+        }
 
-// Automatically submits when pressing Enter
-document.getElementById('passwordInput').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        checkPassword();
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: var(--font-family);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Flex container for the whole screen layout */
+        .tab-container {
+            display: flex;
+            flex-direction: column;
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* The main tab navigation bar */
+        .tab-menu {
+            display: flex;
+            background-color: var(--bg-secondary);
+            border-bottom: 3px double var(--border-color);
+            height: 60px;
+            padding-right: 120px; /* Leaves perfect empty space on the right for the fixed tab */
+        }
+
+        /* Normal menu tab buttons */
+        .tab-button {
+            flex: 1;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            background-color: inherit;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-muted);
+            font-family: var(--font-family);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .tab-button:hover {
+            background-color: var(--bg-primary);
+            color: var(--accent-red);
+        }
+
+        .tab-button.active {
+            background-color: var(--bg-primary);
+            color: var(--accent-red);
+            border-bottom: 4px solid var(--accent-red);
+        }
+
+        /* Persistent corner tab: Locks into top-right layout grid */
+        .corner-settings-tab {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 120px;
+            height: 60px; /* Matches the top menu height exactly */
+            border: none;
+            border-left: 2px solid var(--border-color);
+            border-bottom: 3px double var(--border-color);
+            background-color: var(--accent-red);
+            color: var(--accent-gold);
+            font-size: 14px;
+            font-weight: 700;
+            font-family: var(--font-family);
+            text-transform: uppercase;
+            cursor: pointer;
+            z-index: 1000; /* Stays locked on top layer */
+            transition: all 0.2s ease;
+        }
+
+        .corner-settings-tab:hover {
+            background-color: var(--text-primary);
+            color: var(--bg-primary);
+        }
+
+        /* Active styling when the settings view is open */
+        .corner-settings-tab.active {
+            background-color: var(--bg-primary);
+            color: var(--accent-gold);
+            border-bottom: 4px solid var(--accent-gold);
+        }
+
+        /* Content panels */
+        .tab-panel {
+            display: none;
+            flex: 1;
+            padding: 40px;
+            background-color: var(--bg-primary);
+            overflow-y: auto; /* Internal scrolling if panel content gets long */
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        .tab-panel h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: var(--accent-red);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+        }
+
+        .tab-panel h3 {
+            font-size: 22px;
+            margin-bottem: 16px;
+            color: var(--accent-red);
+            letter-spacing: 2px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+        }
+
+        .tab-panel p {
+            font-size: 18px;
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+
+        /* Settings UI Styling */
+        fieldset {
+            border: 2px dashed var(--border-color);
+            padding: 20px;
+            max-width: 400px;
+            background-color: var(--bg-secondary);
+        }
+
+        legend {
+            padding: 0 10px;
+            color: var(--accent-gold);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        label {
+            font-size: 16px;
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            font-family: var(--font-family);
+            font-size: 16px;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
+            outline: none;
+            cursor: pointer;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+
+</head>
+<body>
+
+<!-- Professional Login Prompt (Visible First) -->
+<!-- Paste this right after your <body> tag opens -->
+<div id="loginScreen" style="position:fixed; top:0; left:0; width:100vw; height:100vh; display:flex; justify-content:center; align-items:center; background-color:#e6dfd3; z-index:9999;">
+    <div style="background-color:#dcd4c4; border:2px solid #7a7365; padding:40px; width:100%; max-width:400px; text-align:center; font-family:monospace;">
+        <h2 style="color:#cd0000; margin-bottom:8px; text-transform:uppercase;">Restricted Access</h2>
+        <p style="color:#5a5449; margin-bottom:24px;">Please enter your credential to view this webpage.</p>
+        <div style="margin-bottom:16px;">
+            <input type="password" id="passwordInput" placeholder="Password" style="width:100%; padding:12px; border:2px solid #7a7365; font-family:monospace; outline:none;">
+        </div>
+        <button onclick="checkPassword()" style="width:100%; padding:12px; background-color:#cd0000; color:white; border:none; font-family:monospace; font-weight:bold; cursor:pointer; text-transform:uppercase;">Unlock Content</button>
+        <div id="error" style="color:#cd0000; font-size:13px; margin-top:12px; display:none; font-weight:bold;">The password you entered is incorrect.</div>
+    </div>
+</div>
+
+
+
+<div id="website" class="tab-container">
+
+    <div class="tab-menu">
+        <button class="tab-button active" onclick="switchTab(event,'dashboard')">★ SCOF INFO</button>
+        <button class="tab-button" onclick="switchTab(event,'analytics')">★ BRANCHES</button>
+        <button class="tab-button" onclick="switchTab(event,'settings')">★ MEMBERS</button>
+        <button class="tab-button" onclick="switchTab(event,'GEA')">★ G.E.A.</button>
+    </div>
+
+    <button id="settings-tab-btn" class="corner-settings-tab" onclick="switchTab(event, 'settings2')">
+        🛠️ Settings
+    </button>
+
+    <div id="dashboard" class="tab-panel active">
+        <h2>SCOF info</h2>
+        <p>SCOF stands for Socialism, Communism, Oligarchy, and Federalism. This is the guiding principals of our ideology both politically, socially, and economically</p>
+    </div>
+
+    <div id="analytics" class="tab-panel">
+        <h2>SCOF branches</h2>
+        <p>"From each according to his ability, to each according to his needs!" - karl marx</p>
+        <h2>Military</h2>
+        <p>about the military</p>
+        <h2>Sectors of production</h2>
+        <p>this is where the different Sectors of production will go</p>
+        <h3>sector1</h3>
+        <p>pending</p>
+        <h3>coding</h3>
+        <p>pending head:oliver 2 assistant:oliver 1 associate: cheeto</p>
+        <h2>Domestic dept</h2>
+
+    </div>
+
+    <div id="GEA" class="tab-panel">
+        <h2>GOVERNED ENTREPRENEURSHIP APPLICATIONS</h2>
+        <p>pending</p>
+    </div>
+
+    <!-- FIXED TYPO: Changed class="tab-panal" to class="tab-panel" -->
+    <div id="settings" class="tab-panel">
+        <h2>SCOF MEMBERS</h2>
+        <p>yeah.</p>
+    </div>
+
+    <div id="settings2" class="tab-panel">
+        <h2>Union Control Settings</h2>
+        <fieldset>
+            <legend>Interface Parameters</legend>
+            <label for="theme">Theme Mode:</label>
+            <select id="theme" name="theme" onchange="changeTheme(this.value)">
+                <option value="light">Light Mode (Bureaucracy)</option>
+                <option value="dark">Dark Mode (Iron Curtain)</option>
+            </select>
+        </fieldset>
+    </div>
+</div>
+
+<script>
+    // Paste this inside your existing <script> tags
+    function checkPassword() {
+        const passwordInput = document.getElementById('passwordInput').value.trim();
+        const errorMessage = document.getElementById('error');
+        const loginScreen = document.getElementById('loginScreen');
+        const website = document.getElementById('website');
+
+        if (passwordInput === "DinoDude0524") {
+            loginScreen.style.setProperty('display', 'none', 'important');
+            website.style.setProperty('display', 'flex', 'important');
+            errorMessage.style.display = "none";
+        } else {
+            errorMessage.style.display = "block";
+        }
     }
-});
+
+    // Automatically submits when pressing Enter
+    document.getElementById('passwordInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            checkPassword();
+        }
+    });
+
+    function switchTab(event, tabId) {
+        // 1. Hide all text panels
+        const panels = document.querySelectorAll('.tab-panel');
+        panels.forEach(panel => panel.classList.remove('active'));
+
+        // 2. Remove active state styling from regular top buttons
+        const buttons = document.querySelectorAll('.tab-button');
+        buttons.forEach(button => button.classList.remove('active'));
+
+        // 3. Remove active state styling from the custom corner settings tab
+        document.getElementById('settings-tab-btn').classList.remove('active');
+
+        // 4. Reveal the target clicked content layout panel area
+        const targetPanel = document.getElementById(tabId);
+        if (targetPanel) {
+            targetPanel.classList.add('active');
+        }
+
+        // 5. Highlight the exact button that triggered the action
+        event.currentTarget.classList.add('active');
+    }
+
+    // Active theme engine
+    function changeTheme(themeValue) {
+        document.documentElement.setAttribute('data-theme', themeValue);
+        localStorage.setItem('scof-theme', themeValue);
+        document.getElementById('theme').value = themeValue;
+    }
+
+    // Auto load saved theme settings on startup
+    window.addEventListener('DOMContentLoaded', () => {
+        const savedTheme = localStorage.getItem('scof-theme') || 'light';
+        changeTheme(savedTheme);
+    });
+</script>
+</body>
+</html>
